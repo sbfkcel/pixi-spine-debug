@@ -2,6 +2,10 @@
 
 As an extension of pixi-spine, it has the same complete drawDebug as the official spine-runtimes of EsotericSoftware.
 
+---
+Thanks [@ivanpopelyshev]([https://github.com/ivanpopelyshev) for the help
+
+
 # use
 
 Introduce `pixi.js`, `pixi-spine.js`, `pixi-spine-debug.js` in order on the page (note the order of dependencies)
