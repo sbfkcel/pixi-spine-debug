@@ -2,8 +2,7 @@
 
 As an extension of pixi-spine, it has the same complete drawDebug as the official spine-runtimes of EsotericSoftware.
 
----
-Thanks [@ivanpopelyshev]([https://github.com/ivanpopelyshev) for the help
+Thanks [@ivanpopelyshev](https://github.com/ivanpopelyshev) for the help
 
 
 # use
