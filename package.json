@@ -1,0 +1,29 @@
+{
+  "name": "pixi-spine-debug",
+  "version": "1.0.0",
+  "description": "",
+  "main": "pixi-spine-debug.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sbfkcel/pixi-spine-debug.git"
+  },
+  "keywords": [
+    "pixi",
+    "spine",
+    "spine debug",
+    "pixi spine debug",
+    "pixi-spine",
+    "pixi-spine-debug",
+    "pixi plugin",
+    "pixi-plugin"
+  ],
+  "author": "sbfkcel@163.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sbfkcel/pixi-spine-debug/issues"
+  },
+  "homepage": "https://github.com/sbfkcel/pixi-spine-debug#readme"
+}
