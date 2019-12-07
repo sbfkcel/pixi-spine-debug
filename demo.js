@@ -44,12 +44,10 @@ loader.load((loader,res)=>{
         },
         fn = (item,index) => {
             setDebug.call(item,index);
-
             let label = item.nextElementSibling;
             if(label.tagName === 'LABEL'){
                 label.innerHTML = debugOptions[index];
             };
-            console.log(item.nextElementSibling);
             item.onchange = function(){
                 setDebug.call(this,index);
             };
