@@ -13,6 +13,8 @@ Introduce `pixi.js`, `pixi-spine.js`, `pixi-spine-debug.js` in order on the page
 const app = new PIXI.Application();
 PIXI.loader.add('demo','spine-pro.json').load((loader,res)=>{
     let demo = new PIXI.spine.Spine(res.demo.spineData);
+    demo.state.setAnimation(0,'animatename',true);
+    demo.x = demo.y = 200;
 
     // Enable drawdebug，Default is false
     demo.drawDebug = true;
