@@ -11,7 +11,8 @@
                 const _ts = this,
                     spine = _ts.spine;
                 let list = _ts.list = [
-                    'bonesLine','bonesDots',                                            // 骨骼
+                    // 'bonesLine','bonesDots',                                            // 骨骼
+                    'bones','skeletonXY',
                     'regionAttachmentsShape',                                           // 区块
                     'meshTrianglesLine','meshHullLine',                                 // 蒙皮
                     'clippingPolygon',                                                  // 蒙版
@@ -24,7 +25,7 @@
                 // 创建图形，并添加到debug容器
                 for(let i=0,len=list.length; i<len; i++){
                     let name = list[i];
-                    ghs[name] = new PIXI.Graphics();
+                    ghs[name] = name === 'bones' ? new PIXI.Container() : new PIXI.Graphics();
                     debugGroup.addChild(ghs[name]);
                 };
 
@@ -35,11 +36,18 @@
                     spine = _ts.spine,
                     ghs = _ts.ghs;
                 
-                _ts.lineWidth = 1 / (spine.scale.x || spine.scale.y || 1);
+                _ts.scale = spine.scale.x || spine.scale.y || 1;
+                _ts.lineWidth = 1 / _ts.scale;
 
                 // 清除绘制
                 for(let key in ghs){
-                    ghs[key].clear();
+                    if(ghs[key] instanceof PIXI.Graphics){
+                        ghs[key].clear();
+                    }else if(ghs[key] instanceof PIXI.Container){
+                        for(let len=ghs[key].children.length; len > 0; len--){
+                            ghs[key].children[len - 1].destroy({children:true,texture:true,baseTexture:true});
+                        };
+                    };
                 };
                 
                 // 绘制骨骼
@@ -289,7 +297,7 @@
                     bones = skeleton.bones,
                     ghs = _ts.ghs;
 
-                ghs.bonesLine.lineStyle(lineWidth, 0xFF0000, 1);
+                ghs.skeletonXY.lineStyle(lineWidth, 0xFF0000, 1);
 
                 for(let i=0,len=bones.length; i<len; i++){
                     let bone = bones[i],
@@ -297,27 +305,81 @@
                         starX = skeletonX + bone.worldX,
                         starY = skeletonY + bone.worldY,
                         endX = skeletonX + boneLen * bone.matrix.a + bone.worldX,
-                        endY = skeletonY + boneLen * bone.matrix.b + bone.worldY,
-                        dotSize = lineWidth * 2;
+                        endY = skeletonY + boneLen * bone.matrix.b + bone.worldY;
         
                     if(bone.data.name === 'root' || bone.parent === null){continue;};
+
+                    // 三角形计算公式
+                    // 面积 A=sqrt((a+b+c)*(-a+b+c)*(a-b+c)*(a+b-c))/4
+                    // 阿尔法 alpha=acos((pow(b, 2)+pow(c, 2)-pow(a, 2))/(2*b*c))
+                    // 贝塔 beta=acos((pow(a, 2)+pow(c, 2)-pow(b, 2))/(2*a*c))
+                    // 伽马 gamma=acos((pow(a, 2)+pow(b, 2)-pow(c, 2))/(2*a*b))
+
+                    let w = Math.abs(starX - endX),
+                        h = Math.abs(starY - endY),
+                        // a = w,                                              // 边长a
+                        a2 = Math.pow(w,2),                                 // 边长a平方根
+                        b = h,                                              // 边长b
+                        b2 = Math.pow(h,2),                                 // 边长b平方根
+                        c = Math.sqrt(a2 + b2),                             // 边长c
+                        c2 = Math.pow(c,2),                                 // 边长c平方根
+                        rad = Math.PI / 180,
+                        // A = Math.acos([a2 + c2 - b2] / [2 * a * c]) || 0,   // A角角度
+                        // C = Math.acos([a2 + b2 - c2] / [2 * a * b]) || 0,   // C角角度
+                        B = Math.acos([c2 + b2 - a2] / [2 * b * c]) || 0;   // B角角度
+                    if(c === 0){continue;};
+
+                    let gp = new PIXI.Graphics();
+                    ghs.bones.addChild(gp);
         
                     // 绘制骨骼线条
-                    ghs.bonesLine.moveTo(starX,starY);
-                    ghs.bonesLine.lineTo(endX,endY);
-        
-                    // 绘制骨骼点
-                    ghs.bonesDots.beginFill(0x00FF00,1);
-                    ghs.bonesDots.drawCircle(starX,starY,dotSize);
-                    ghs.bonesDots.endFill();
+                    let refRation = c / 50 / _ts.scale;
+                    gp.beginFill(0x00EECC,1);
+                    gp.drawPolygon(
+                        0,0,
+                        0 - refRation, c - refRation * 3,
+                        0, c - refRation,
+                        0 + refRation, c - refRation * 3
+                    );
+                    gp.endFill();
+                    gp.x = starX;
+                    gp.y = starY;
+                    gp.pivot.y = c;
+                    
+                    // 计算骨骼旋转角度
+                    let rotation = 0;
+                    if(starX < endX && starY < endY){                     // 右下
+                        rotation = -B + 180 * rad;
+                    }else if(starX > endX && starY < endY){               // 左下
+                        rotation = 180 * rad + B;
+                    }else if(starX > endX && starY > endY){               // 左上
+                        rotation = -B;
+                    }else if(starX < endX && starY > endY){               // 左下
+                        rotation = B;
+                    }else if(starY === endY && starX < endX){             // 向右
+                        rotation = 90 * rad;
+                    }else if(starY === endY && starX > endX){             // 向左
+                        rotation = -90 * rad;
+                    }else if(starX === endX && starY < endY){             // 向下
+                        rotation = 180 * rad;
+                    }else if(starX === endX && starY > endY){             // 向上
+                        rotation = 0;
+                    };
+                    gp.rotation = rotation;
+                    
+                    // 绘制骨骼起始旋转点
+                    gp.lineStyle(lineWidth + refRation / 2.4,0x00EECC,1)
+                    gp.beginFill(0x000000,0.6);
+                    gp.drawCircle(0,c,refRation * 1.2);
+                    gp.endFill();
                 };
         
                 // 绘制骨架起点『X』形式
                 let startDotSize = lineWidth * 3;
-                ghs.bonesLine.moveTo(skeletonX - startDotSize,skeletonY - startDotSize);
-                ghs.bonesLine.lineTo(skeletonX + startDotSize,skeletonY + startDotSize);
-                ghs.bonesLine.moveTo(skeletonX + startDotSize,skeletonY - startDotSize);
-                ghs.bonesLine.lineTo(skeletonX - startDotSize,skeletonY + startDotSize);
+                ghs.skeletonXY.moveTo(skeletonX - startDotSize,skeletonY - startDotSize);
+                ghs.skeletonXY.lineTo(skeletonX + startDotSize,skeletonY + startDotSize);
+                ghs.skeletonXY.moveTo(skeletonX + startDotSize,skeletonY - startDotSize);
+                ghs.skeletonXY.lineTo(skeletonX - startDotSize,skeletonY + startDotSize);
             }
         };
         
