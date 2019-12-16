@@ -234,7 +234,7 @@
                     ghs = _ts.ghs;
                 
                 ghs.pathsCurve.lineStyle(lineWidth,0xFF0000,1);
-                ghs.pathsLine.lineStyle(lineWidth * 2,0xFF00FF,1);
+                ghs.pathsLine.lineStyle(lineWidth,0xFF00FF,1);
 
                 for(let i=0,len=slots.length; i<len; i++){
                     let slot = slots[i];
