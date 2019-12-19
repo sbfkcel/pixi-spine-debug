@@ -37,7 +37,7 @@
                     ghs = _ts.ghs;
                 
                 _ts.scale = spine.scale.x || spine.scale.y || 1;
-                _ts.lineWidth = 1 / _ts.scale;
+                _ts.lineWidth = 1 / Math.abs(_ts.scale);
 
                 // 清除绘制
                 for(let key in ghs){
@@ -187,11 +187,8 @@
                     ghs = _ts.ghs,
                     lineWidth = _ts.lineWidth;
 
-                ghs.boundingBoxesRect.lineStyle(lineWidth,0x00FF00,1);
-                ghs.boundingBoxesPolygon.lineStyle(lineWidth,0x00FF00,0.5);
-                ghs.boundingBoxesPolygon.beginFill(0x00FF00,0.1);
-                ghs.boundingBoxesCircle.lineStyle(0);
-                ghs.boundingBoxesCircle.beginFill(0x00DD00);
+                // 绘制边界框的总外框
+                ghs.boundingBoxesRect.lineStyle(lineWidth,0x00FF00,5);
 
                 let bounds = new PIXI.spine.core.SkeletonBounds();
                 bounds.update(this.skeleton, true);
@@ -199,28 +196,34 @@
 
                 let polygons = bounds.polygons,
                     drawPolygon = (polygonVertices,offset,count)=>{
+                        ghs.boundingBoxesPolygon.lineStyle(lineWidth,0x00FF00,1);
+                        ghs.boundingBoxesPolygon.beginFill(0x00FF00,0.1);
+
                         if(count < 3){
                             throw new Error('Polygon must contain at least 3 vertices');
                         };
                         let paths = [],
                             dotSize = lineWidth * 2;
-                        for(let i=0,len=polygonVertices.length; i<len; i+=4){
+                        for(let i=0,len=polygonVertices.length; i<len; i+=2){
                             let x1 = polygonVertices[i],
-                                y1 = polygonVertices[i+1],
-                                x2 = polygonVertices[i+2],
-                                y2 = polygonVertices[i+3];
-                            if(i < len){
-                                ghs.boundingBoxesCircle.drawCircle(x1,y1,dotSize);
-                                ghs.boundingBoxesCircle.drawCircle(x2,y2,dotSize);
-                            };
-                            paths.push(x1,y1,x2,y2);
+                                y1 = polygonVertices[i+1];
+                            
+                            // 绘制边界框节点
+                            ghs.boundingBoxesCircle.lineStyle(0);
+                            ghs.boundingBoxesCircle.beginFill(0x00DD00);
+                            ghs.boundingBoxesCircle.drawCircle(x1,y1,dotSize);
+                            ghs.boundingBoxesCircle.endFill();
+                            
+                            paths.push(x1,y1);
                         };
+
+                        // 绘制边界框区域
                         ghs.boundingBoxesPolygon.drawPolygon(paths);
                         ghs.boundingBoxesPolygon.endFill();
-                        ghs.boundingBoxesCircle.endFill();
                     };
+                
                 for(let i=0,len=polygons.length; i<len; i++){
-                    let polygon = polygons[i];
+                    let polygon = polygons[i]
                     drawPolygon(polygon,0,polygon.length);
                 };
             }
